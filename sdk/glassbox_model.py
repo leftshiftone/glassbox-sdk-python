@@ -68,6 +68,9 @@ class GlassBoxModel(DataMixin):
             def __init__(self, obj: dict):
                 super().__init__(obj)
                 self.url = obj["url"]
+                for key in obj.keys():
+                    if key != "purposes":
+                        self.__setattr__(key, obj[key])
 
         for data_source in obj["dataSources"]:
             purposes = [Purpose(e) for e in data_source["purposes"]]

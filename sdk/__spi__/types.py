@@ -20,6 +20,10 @@ class Benchmark(Traceable):
     score: str
     url: str
 
+    @staticmethod
+    def from_dict(obj: dict):
+        return Benchmark(obj["type"], obj["score"], obj["url"])
+
 class CodeSource(Traceable):
     pass
 
@@ -70,6 +74,9 @@ class License:
     name: str
     url: str
 
+    @staticmethod
+    def from_dict(obj: dict):
+        return License(name=obj["name"], url=obj["url"])
 
 CC_BY_4 = License("cc-by-4.0", "https://creativecommons.org/licenses/by/4.0/")
 APACHE_2 = License("apache-2.0", "http://www.apache.org/licenses/LICENSE-2.0")
@@ -77,6 +84,12 @@ APACHE_2 = License("apache-2.0", "http://www.apache.org/licenses/LICENSE-2.0")
 @dataclass
 class Metric:
     name: str
-    value: float
-    value_min: Optional[float] = 0
-    value_max: Optional[float] = 1
+    value: str
+    value_min: Optional[str] = "0"
+    value_max: Optional[str] = "1"
+
+    @staticmethod
+    def from_dict(obj: dict):
+        value_min = obj.get("value_min", 0)
+        value_max = obj.get("value_max", 0)
+        return Metric(obj["name"], obj["value"], value_min, value_max)

@@ -5,9 +5,9 @@ from typing import List, Union, Optional, Tuple, OrderedDict
 
 from sdk.__spi__.enumy import Property, Label
 from sdk.__spi__.types import License, Benchmark, Metric, DataSource, CodeSource
+from sdk.__spi__.validation import Logging
 from sdk.glassbox_config import ModelRef
 from sdk.mixin.data_mixin import DataMixin
-from sdk.__spi__.validation import Logging
 
 
 class Purpose(Enum):
@@ -46,6 +46,40 @@ class GlassBoxModel(DataMixin):
         self.name = model_ref.name
         self.version = model_ref.version
         self.variant = model_ref.variant
+
+    @staticmethod
+    def from_json(path: str):
+        with open(path, "r") as file:
+            obj = json.load(file)
+        model_ref = ModelRef.from_dict(obj)
+        model = GlassBoxModel(model_ref)
+        model.license = License.from_dict(obj)
+        model.checksum = obj["checksum"]
+        model.size = obj["size"]
+        model.url = obj["url"]
+        model.description = obj["description"]
+        model.labels = obj["labels"]
+        model.benchmarks = [Benchmark.from_dict(e) for e in obj["benchmarks"]]
+        model.properties = obj["properties"]
+        model.hyper_parameters = obj["hyperParameters"]
+        model.metrics = [Metric.from_dict(e) for e in obj["metrics"]]
+
+        class DynamicSource(CodeSource, DataSource, OrderedDict):
+            def __init__(self, obj: dict):
+                super().__init__(obj)
+                self.url = obj["url"]
+
+        for data_source in obj["dataSources"]:
+            purposes = [Purpose(e) for e in data_source["purposes"]]
+            instance = DynamicSource(data_source)
+            model.add_data(instance, purposes)
+
+        for code_source in obj["codeSources"]:
+            purposes = [Purpose(e) for e in code_source["purposes"]]
+            instance = DynamicSource(code_source)
+            model.add_code(instance, purposes)
+
+        return model
 
     def add_benchmark(self, benchmark: Benchmark):
         """
